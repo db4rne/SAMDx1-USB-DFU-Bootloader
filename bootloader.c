@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
+/*
 NOTES:
 - anything pointed to by udc_mem[*].*.ADDR.reg *MUST* BE IN RAM and be 32-bit aligned... no exceptions
 */
@@ -58,7 +58,7 @@ typedef struct
 /*- Variables ---------------------------------------------------------------*/
 static uint32_t usb_config = 0;
 static uint32_t dfu_status_choices[4] =
-{ 
+{
   0x00000000, 0x00000002, /* normal */
   0x00000000, 0x00000005, /* dl */
 };
@@ -211,7 +211,7 @@ static void USB_Service(void)
           if (request->wLength)
           {
             dfu_status = dfu_status_choices + 2;
-            dfu_addr = 0x400 + request->wValue * 64;
+            dfu_addr = 0x800 + request->wValue * 64;
           }
           /* fall through */
         default: // DFU_UPLOAD & others
@@ -241,8 +241,8 @@ void bootloader(void)
 
   PAC1->WPCLR.reg = 2; /* clear DSU */
 
-  DSU->ADDR.reg = 0x400; /* start CRC check at beginning of user app */
-  DSU->LENGTH.reg = *(volatile uint32_t *)0x410; /* use length encoded into unused vector address in user app */
+  DSU->ADDR.reg = 0x800; /* start CRC check at beginning of user app */
+  DSU->LENGTH.reg = *(volatile uint32_t *)0x810; /* use length encoded into unused vector address in user app */
 
   /* ask DSU to compute CRC */
   DSU->DATA.reg = 0xFFFFFFFF;
@@ -260,7 +260,7 @@ void bootloader(void)
 #else
   if (PM->RCAUSE.reg & PM_RCAUSE_POR)
     *DBL_TAP_PTR = 0; /* a power up event should never be considered a 'double tap' */
-  
+
   if (*DBL_TAP_PTR == DBL_TAP_MAGIC)
   {
     /* a 'double tap' has happened, so run bootloader */
@@ -281,7 +281,7 @@ run_bootloader:
   /*
   configure oscillator for crystal-free USB operation (USBCRM / USB Clock Recovery Mode)
   */
-  
+
   SYSCTRL->OSC8M.bit.PRESC = 0;
 
   SYSCTRL->INTFLAG.reg = SYSCTRL_INTFLAG_BOD33RDY | SYSCTRL_INTFLAG_BOD33DET | SYSCTRL_INTFLAG_DFLLRDY;
